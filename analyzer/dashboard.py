@@ -12,8 +12,8 @@ File layout (all files in one folder, configured in FILE CONFIG below):
 This file contains ZERO analysis logic.
 Run cricket_wbi.py first to generate wbi_rankings.csv, then start this dashboard.
 
-Run:
-    streamlit run cricket_dashboard.py
+Run from the repo root:
+    streamlit run analyzer/dashboard.py
 
 Requires:
     pip install streamlit pandas plotly
@@ -26,9 +26,10 @@ import plotly.express as px
 from pathlib import Path
 
 # ─────────────────────────────────────────────
-# FILE CONFIG  ← edit these
+# PATH CONFIG  ← no need to change if folder layout stays the same
 # ─────────────────────────────────────────────
-DATA_FOLDER   = Path("data")
+BASE_DIR     = Path(__file__).resolve().parent
+DATA_FOLDER   = BASE_DIR / "data"
 
 SEASON1_FILE  = DATA_FOLDER / "major_league_batting_stats_2023.csv"
 SEASON2_FILE  = DATA_FOLDER / "major_league_batting_stats_2024.csv"
