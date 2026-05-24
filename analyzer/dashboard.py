@@ -212,7 +212,7 @@ def calc_quality(seasons):
     )
     grp["innings_weighted_avg"] = grp["total_weighted"] / grp["total_innings"]
     grp["quality_raw"] = np.sqrt(grp["innings_weighted_avg"] * grp["total_runs"])
-    return grp["quality_raw"]
+    return grp[["quality_raw", "total_runs", "innings_weighted_avg"]]
 
 def calc_consistency(seasons, quality_norm):
     frames = []
@@ -295,14 +295,15 @@ def build_wbi(seasons, weights: dict, min_innings: int = MIN_INNINGS) -> pd.Data
     qualified_players = set(total_inn[total_inn >= min_innings].index)
     seasons = [df[df["Player"].isin(qualified_players)].copy() for df in seasons]
 
-    quality       = calc_quality(seasons)
-    quality_norm  = minmax(quality)
-    consistency   = calc_consistency(seasons, quality_norm)
-    participation = calc_participation(seasons)
-    dominance     = calc_dominance(seasons)
+    quality_df    = calc_quality(seasons)
+    quality        = quality_df["quality_raw"]
+    quality_norm   = minmax(quality)
+    consistency    = calc_consistency(seasons, quality_norm)
+    participation  = calc_participation(seasons)
+    dominance      = calc_dominance(seasons)
 
     result = (
-        quality.to_frame()
+        quality_df
         .join(consistency,   how="outer")
         .join(participation, how="outer")
         .join(dominance,     how="outer")
@@ -313,6 +314,9 @@ def build_wbi(seasons, weights: dict, min_innings: int = MIN_INNINGS) -> pd.Data
         .drop_duplicates("Player", keep="last")
     )
     result = result.merge(all_players, on="Player", how="left")
+
+    result["Total Runs"] = result["total_runs"].fillna(0)
+    result["Average"]    = result["innings_weighted_avg"].fillna(0)
 
     raw_cols = ["quality_raw","consistency_raw","participation_raw","dominance_raw"]
     result[raw_cols] = result[raw_cols].fillna(0)
@@ -778,8 +782,13 @@ with tab2:
                 key=f"tab2_bar_{pillar}",
             )
             top10 = df.nlargest(10, norm_col)[
-                ["Rank","Player","Team",raw_col,norm_col]
-            ].rename(columns={raw_col:"Raw Score", norm_col:"Norm (0–1)"})
+                ["Rank","Player","Team","Total Runs","Average",raw_col,norm_col]
+            ].rename(columns={
+                "Total Runs":"Total Runs",
+                "Average":"Avg",
+                raw_col:"Raw Score",
+                norm_col:"Norm (0–1)"
+            })
             st.dataframe(top10.reset_index(drop=True),
                          use_container_width=True, hide_index=True)
 
@@ -997,7 +1006,7 @@ with tab6:
     filtered  = df[df["Team"].isin(sel_teams)].copy()
 
     display_cols = [c for c in [
-        "Rank","Player","Team",
+        "Rank","Player","Team","Total Runs","Average",
         "Quality (Raw)","Consistency (Raw)","Participation (Raw)","Dominance (Raw)",
         "Quality (Norm)","Consistency (Norm)","Participation (Norm)","Dominance (Norm)",
         "WBI Score",
