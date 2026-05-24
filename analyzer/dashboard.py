@@ -230,8 +230,16 @@ def calc_consistency(seasons, quality_norm):
     cv       = (std_avg / mean_avg.replace(0, np.nan)) * 100
     cv       = cv.fillna(0)
     raw      = 1 / (1 + cv)
+
+    innings = (
+        pd.concat([df[["Player","Innings"]].dropna(subset=["Innings"]) for df in seasons], ignore_index=True)
+        .groupby("Player")["Innings"].sum()
+    )
+    confidence = innings / innings.max()
+    confidence = confidence.reindex(raw.index).fillna(0)
+
     q_aligned = quality_norm.reindex(raw.index).fillna(0)
-    return (raw * q_aligned).rename("consistency_raw")
+    return (raw * q_aligned * confidence).rename("consistency_raw")
 
 def calc_participation(seasons):
     m = pd.concat([df[["Player","Matches"]] for df in seasons]).groupby("Player")["Matches"].sum()
