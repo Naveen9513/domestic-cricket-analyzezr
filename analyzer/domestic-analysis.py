@@ -14,11 +14,11 @@ Pillar summary:
                              Geometric mean that rewards both average AND volume.
                              A fluky high average over 2 innings is pulled down
                              hard by the low total-runs term.
-    P2 Consistency   (20%) — Quality-weighted inverted CV of season averages.
+    P2 Consistency   (25%) — Quality-weighted inverted CV of season averages.
                              Consistent mediocrity is penalised via quality_norm.
-    P3 Participation (25%) — (matches + innings) ratio vs dataset maximum.
+    P3 Participation (10%) — (matches + innings) ratio vs dataset maximum.
                              Weight raised to counter small-sample bias.
-    P4 Dominance     (15%) — Mean Z-score vs season peers.
+    P4 Dominance     (25%) — Mean Z-score vs season peers.
 """
 
 import pandas as pd
